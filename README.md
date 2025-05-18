@@ -1,2 +1,2 @@
 # ComfyUI-This-And-That
-Comfyui custom nodes I use
+Comfyui custom nodes I use for... This and That...
