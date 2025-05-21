@@ -1,3 +1,3 @@
-# ComfyUI-This-And-That
+# ComfyUI-This-n-That
 Comfyui custom nodes I use for... This and That...
 This-n-That (TnT, hehe i am funny)

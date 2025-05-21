@@ -1,6 +1,7 @@
 import { app } from "../../scripts/app.js";
 import { ComfyWidgets } from "../../scripts/widgets.js";
 
+// From https://github.com/TinyTerra/ComfyUI_tinyterraNodes
 function addTextDisplay(nodeType) {
     const onNodeCreated = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
@@ -21,35 +22,18 @@ function addTextDisplay(nodeType) {
                 widget.value = message.text.join('');
             }
         }
-        
         this.onResize?.(this.size);
     };
 }
 
-// function overwriteSeedControl(nodeType) {
-//     const onNodeCreated = nodeType.prototype.onNodeCreated;
-//     nodeType.prototype.onNodeCreated = function () {
-//         onNodeCreated ? onNodeCreated.apply(this, arguments) : undefined;
-//         this.seedControl = new SeedControl(this);
-//     }
-// }
-
-console.log("---")
 app.registerExtension({
-    name: "comfy.ttN.widgets",
+    name: "thisNthat.widgets",
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        // if (nodeData.name.startsWith("ttN ") && ["ttN pipeLoader_v2", "ttN pipeKSampler_v2", "ttN pipeKSamplerAdvanced_v2", "ttN pipeLoaderSDXL_v2", "ttN pipeKSamplerSDXL_v2", "ttN KSampler_v2"].includes(nodeData.name)) {
-        if (nodeData.output_name.includes('seed')) {
-            overwriteSeedControl(nodeType)
-        }
-        // }
-        console.log(nodeData)
-        console.log(nodeType)
-        if (["ttN_textDebug","Show Prompt (Hapse)"].includes(nodeData.name)) {
+        if (["Show Prompt (Hapse)"].includes(nodeData.name)) {
             addTextDisplay(nodeType)
         }
-        // if (nodeData.name.startsWith("ttN textCycle")) {
-        //     overwriteIndexControl(nodeType)
-        // }
+        if (["Simple Seed Selector (Hapse)"].includes(nodeData.name)) {
+            
+        }
     },
 }); 

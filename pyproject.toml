@@ -1,17 +1,17 @@
 #  Edit the following fields to match your project
 
 [project]
-name = "ComfyUI-This-And-That"
-description = "Comfyui custom nodes I use for... This and That..."
+name = "ComfyUI-This-n-That"
+description = "Comfyui custom nodes I use for... This n That..."
 version = "1.0.0"
 license = {file = "LICENSE"}
 
 
 [project.urls]
-Repository = "https://github.com/Hapseleg/ComfyUI-This-And-That/tree/main"
+Repository = "https://github.com/Hapseleg/ComfyUI-This-n-That/tree/main"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
 PublisherId = "Hapse"
-DisplayName = "This and that (Hapse)"
+DisplayName = "This n that (Hapse)"
 Icon = ""
