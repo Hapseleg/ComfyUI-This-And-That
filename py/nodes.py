@@ -2,11 +2,7 @@
 import json
 import os
 import csv
-import random
-
-
-MAX_SEED_NUM = 18446744073709552000
-
+import folder_paths
 
 # SimpleRatioSelector
 def read_ratio_presets():
@@ -49,78 +45,9 @@ class SimpleRatioSelector:
 
         return (int(width), int(height))
 
-# SimpleSeedSelector
-
-# TODO:
-#find ud af om man kan hide control before generate
-#sæt den til altid randomize
-#ændre værdien på seed tilbage til det før hvis mode er på fixed
-class SimpleSeedSelector:
-    def __init__(self):
-        self.num = 0
-    
-    @classmethod
-    def INPUT_TYPES(s):
-        # s.random_number = random.randint(1, MAX_SEED_NUM)
-        return {
-            "required": {
-                "seed": ("INT", {"default": 1, "min": 1, "max": MAX_SEED_NUM}),
-                "mode": ("BOOLEAN", {"default": True, "label_on": "fixed_seed", "label_off": "randomize_seed"}),
-                "global_seed": ("BOOLEAN", {"default": True}),
-            },
-            "hidden": {
-            "unique_id": "UNIQUE_ID",
-            "prompt": "PROMPT", 
-            "extra_pnginfo": "EXTRA_PNGINFO",
-        }
-        }
-
-    RETURN_TYPES = ("INT", "FLOAT")
-    RETURN_NAMES = ("seed_int", "seed_float")
-    FUNCTION = "run"
-
-    CATEGORY = "utils/this_and_that"
-
-    OUTPUT_NODE = True
-
-    def run(self, seed, mode, global_seed, **kwargs):
-        
-        # Force update
-        def IS_CHANGED(self):
-                self.num += 1 if self.num == 0 else -1
-                return self.num
-        setattr(self.__class__, 'IS_CHANGED', IS_CHANGED)
-
-        return (int(seed), float(seed))
-    
-    
-# class SimpleSeedSelector:
-#     @classmethod
-#     def INPUT_TYPES(s):
-#         return {
-#             "required": {
-#                 "value": ("INT", {"default": 1, "min": 1, "max": MAX_SEED_NUM}),
-#                 "mode": ("BOOLEAN", {"default": True, "label_on": "fixed_seed", "label_off": "randomize_seed"}),
-#                 "global_seed": ("BOOLEAN", {"default": True}),
-#             },
-#             # "hidden": {
-#             #     "unique_id": "UNIQUE_ID", "extra_pnginfo": "EXTRA_PNGINFO", "prompt": "PROMPT"
-#             #     }
-#         }
-
-#     RETURN_TYPES = ("INT")
-#     RETURN_NAMES = ("seed_int")
-#     FUNCTION = "run"
-#     CATEGORY = "utils/this_and_that"
-#     OUTPUT_NODE = True
-
-#     def run(self, value, mode, global_seed):
-#         print(value)
-#         value = 2
-#         return (1)
 
 
-# https://github.com/comfyanonymous/ComfyUI/issues/1475
+
 class ShowPrompt:
     def __init__(self):
         self.num = 0
@@ -128,7 +55,9 @@ class ShowPrompt:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {},
+            "required": {
+                "mode": ("BOOLEAN", {"default": True, "label_on": "prompt", "label_off": "workflow"}),
+            },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO", "unique_id": "UNIQUE_ID",}
         }
 
@@ -138,25 +67,24 @@ class ShowPrompt:
     FUNCTION = "run"
     OUTPUT_NODE = True
 
-    def run(self, unique_id, text="", prompt=None, **kwargs):
+    def run(self, mode, unique_id, text="", prompt=None, **kwargs):
         # Force update
         def IS_CHANGED(self):
                 self.num += 1 if self.num == 0 else -1
                 return self.num
         setattr(self.__class__, 'IS_CHANGED', IS_CHANGED)
         
-        
         clean_prompt = prompt
         for n in clean_prompt:
             if n == unique_id:
                 clean_prompt[n]["inputs"]["display"] = ""
-                continue
+                # I assume theres max 1 of these nodes in the workflow... BREAK
+                break
         text = json.dumps(clean_prompt)
+        
         return {"ui": {"text": text}}
 
 NODE_CLASS_MAPPINGS = {
     "Simple Ratio Selector (Hapse)": SimpleRatioSelector,
-    "Simple Seed Selector (Hapse)": SimpleSeedSelector,
     "Show Prompt (Hapse)": ShowPrompt,
-    # "ttN_textDebug": ttN_textDebug,
 }

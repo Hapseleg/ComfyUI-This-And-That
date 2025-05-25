@@ -1,12 +1,11 @@
 from .py.nodes import *
+from .py.seed import *
 
 
-#  Map all your custom nodes classes with the names that will be displayed in the UI.
 NODE_CLASS_MAPPINGS = {
-    "Simple Ratio Selector (Hapse)": SimpleRatioSelector,
-    "Simple Seed Selector (Hapse)": SimpleSeedSelector,
-    "Show Prompt (Hapse)": ShowPrompt,
-    # "ttN_textDebug": ttN_textDebug,
+    "Simple Ratio Selector TnT": SimpleRatioSelector,
+    "Simple Seed Selector TnT": SimpleSeedSelector,
+    "Show Prompt TnT": ShowPrompt,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {}
