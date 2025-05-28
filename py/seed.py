@@ -33,25 +33,24 @@ class SeedGenerator:
         return seed
 
 
-def control_seed(v, action, seed_is_global):
-    print("control_seed")
-    action = v['inputs']['action'] if seed_is_global else action
-    value = v['inputs']['value'] if seed_is_global else v['inputs']['seed_num']
+# def control_seed(v, action, seed_is_global):
+#     print("control_seed")
+#     action = v['inputs']['action'] if seed_is_global else action
+#     value = v['inputs']['value'] if seed_is_global else v['inputs']['seed_num']
 
-    value = random.randint(0, MAX_SEED_NUM)
-    if seed_is_global:
-        v['inputs']['value'] = value
+#     value = random.randint(0, MAX_SEED_NUM)
+#     if seed_is_global:
+#         v['inputs']['value'] = value
 
-    return value
+#     return value
 
-# seed_widgets contains all the node id that has a seed input and the "position" in that node
-# so for example "KSampler (Advanced) with the node id 10 would be 10:1 because its noise_seed input is the 2nd input from the top (so thats index 1)"
+# global_seed_widget is added in ..\web\widgets.js "api.queuePrompt"
 def has_global_seed_node(json_data):
     try: 
-        wf = json_data['extra_data']['extra_pnginfo']['workflow']
-        global_seed_widget_id = wf['global_seed_widget_id']
-        global_seed_widget_fixed_enabled = wf['global_seed_widget_fixed_enabled']
-        global_seed_widget_global_enabled = wf['global_seed_widget_global_enabled']
+        seed_widget = json_data['extra_data']['extra_pnginfo']['workflow']['global_seed_widget']#global_seed_widget
+        global_seed_widget_id = seed_widget['id']
+        global_seed_widget_fixed_enabled = seed_widget['fixed_seed']
+        global_seed_widget_global_enabled = seed_widget['global_enabled']
         # seedNodeId, seedNodeRandomizeEnabled, seedNodeGlobalEnabled
         # seed_node_id = next(iter(global_seed_widget_id))
         # global_activated = global_seed_widget_id[seed_node_id]
@@ -85,74 +84,74 @@ def has_global_seed_node(json_data):
     # return has_node, global_active
 
 
-def prompt_seed_update(json_data):
-    seed_widget_map = json_data['extra_data']['extra_pnginfo']['workflow']['seed_widgets']
+# def prompt_seed_update(json_data):
+#     seed_widget_map = json_data['extra_data']['extra_pnginfo']['workflow']['seed_widgets']
     
-    # check if theres any nodes that has "seed" input/output/etc in it (they are added in the widgets.js)
-    if len(seed_widget_map) == 0:
-        return False
+#     # check if theres any nodes that has "seed" input/output/etc in it (they are added in the widgets.js)
+#     if len(seed_widget_map) == 0:
+#         return False
     
-    # check if "Simple Seed Selector TnT" is anywhere to be found in the workflow
-    #Simple Seed Selector TnT
-    #{'3': 0, '10': 0}
+#     # check if "Simple Seed Selector TnT" is anywhere to be found in the workflow
+#     #Simple Seed Selector TnT
+#     #{'3': 0, '10': 0}
 
-    workflow = json_data['extra_data']['extra_pnginfo']['workflow']
-    # seed_widget_map = workflow['seed_widgets']
-    value = None
-    mode = None
-    node = None
-    action = None
-    seed_is_global = False
+#     workflow = json_data['extra_data']['extra_pnginfo']['workflow']
+#     # seed_widget_map = workflow['seed_widgets']
+#     value = None
+#     mode = None
+#     node = None
+#     action = None
+#     seed_is_global = False
 
-    for k, v in json_data['prompt'].items():
-        if 'class_type' not in v:
-            continue
+#     for k, v in json_data['prompt'].items():
+#         if 'class_type' not in v:
+#             continue
 
-        cls = v['class_type']
+#         cls = v['class_type']
 
-        if cls == 'Show Prompt (Hapse)':
-            mode = v['inputs']['mode']
-            action = v['inputs']['action']
-            value = v['inputs']['value']
-            node = k, v
-            seed_is_global = True
+#         if cls == 'Show Prompt (Hapse)':
+#             mode = v['inputs']['mode']
+#             action = v['inputs']['action']
+#             value = v['inputs']['value']
+#             node = k, v
+#             seed_is_global = True
 
-    # control before generated
-    if mode is not None and mode and seed_is_global:
-        value = control_seed(node[1], action, seed_is_global)
+#     # control before generated
+#     if mode is not None and mode and seed_is_global:
+#         value = control_seed(node[1], action, seed_is_global)
 
-    if seed_is_global:
-        if value is not None:
-            seed_generator = SeedGenerator(value, action)
+#     if seed_is_global:
+#         if value is not None:
+#             seed_generator = SeedGenerator(value, action)
 
-            for k, v in json_data['prompt'].items():
-                for k2, v2 in v['inputs'].items():
-                    if isinstance(v2, str) and '$GlobalSeed.value$' in v2:
-                        v['inputs'][k2] = v2.replace('$GlobalSeed.value$', str(value))
+#             for k, v in json_data['prompt'].items():
+#                 for k2, v2 in v['inputs'].items():
+#                     if isinstance(v2, str) and '$GlobalSeed.value$' in v2:
+#                         v['inputs'][k2] = v2.replace('$GlobalSeed.value$', str(value))
 
-                if k not in seed_widget_map:
-                    continue
+#                 if k not in seed_widget_map:
+#                     continue
 
-                if 'seed_num' in v['inputs']:
-                    if isinstance(v['inputs']['seed_num'], int):
-                        v['inputs']['seed_num'] = seed_generator.next()
+#                 if 'seed_num' in v['inputs']:
+#                     if isinstance(v['inputs']['seed_num'], int):
+#                         v['inputs']['seed_num'] = seed_generator.next()
 
-                if 'seed' in v['inputs']:
-                    if isinstance(v['inputs']['seed'], int):
-                        v['inputs']['seed'] = seed_generator.next()
+#                 if 'seed' in v['inputs']:
+#                     if isinstance(v['inputs']['seed'], int):
+#                         v['inputs']['seed'] = seed_generator.next()
 
-                if 'noise_seed' in v['inputs']:
-                    if isinstance(v['inputs']['noise_seed'], int):
-                        v['inputs']['noise_seed'] = seed_generator.next()
+#                 if 'noise_seed' in v['inputs']:
+#                     if isinstance(v['inputs']['noise_seed'], int):
+#                         v['inputs']['noise_seed'] = seed_generator.next()
 
-                for k2, v2 in v['inputs'].items():
-                    if isinstance(v2, str) and '$GlobalSeed.value$' in v2:
-                        v['inputs'][k2] = v2.replace('$GlobalSeed.value$', str(value))
-        # control after generated
-        if mode is not None and not mode:
-            control_seed(node[1], action, seed_is_global)
+#                 for k2, v2 in v['inputs'].items():
+#                     if isinstance(v2, str) and '$GlobalSeed.value$' in v2:
+#                         v['inputs'][k2] = v2.replace('$GlobalSeed.value$', str(value))
+#         # control after generated
+#         if mode is not None and not mode:
+#             control_seed(node[1], action, seed_is_global)
 
-    return value is not None
+#     return value is not None
 
 
 def workflow_seed_update(json_data):
@@ -202,12 +201,21 @@ def set_seed_values(json_data, global_seed_node_id, new_seed):
                 break
             
         prompt[k]['inputs'][input] = new_seed
+        
+        for wf_node in wf_nodes:
+            wf_node_id = str(wf_node['id'])
+            if wf_node_id == k:
+                wf_node['widgets_values'][v] = new_seed
+                print(wf_node['widgets_values'][v])
+        
+    
 
 
 def onprompt(json_data):
     new_seed = random.randint(0, MAX_SEED_NUM)
     #"Simple Seed Selector TnT"
     global_seed_node_id, global_enabled, fixed_seed_enabled = has_global_seed_node(json_data)
+    print(f"global_seed_node_id: {global_seed_node_id}")
     # is_changed = prompt_seed_update(json_data)
     if global_seed_node_id != -1:
         set_seed_values(json_data, global_seed_node_id, new_seed)
@@ -219,11 +227,6 @@ server.PromptServer.instance.add_on_prompt_handler(onprompt)
 
 
 # SimpleSeedSelector
-
-# TODO:
-#find ud af om man kan hide control before generate
-#sæt den til altid randomize
-#ændre værdien på seed tilbage til det før hvis mode er på fixed
 class SimpleSeedSelector:
     def __init__(self):
         self.num = 0

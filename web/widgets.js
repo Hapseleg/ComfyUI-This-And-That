@@ -76,7 +76,7 @@ const originalQueuePrompt = api.queuePrompt;
 // Override queuePrompt to collect seed widgets
 api.queuePrompt = async function (e, { output: op, workflow: wf }) {
     console.log("queuePrompt")
-    let seedNodeId = null
+    let seedNodeId = -1
     let seedNodeFixedEnabled = false
     let seedNodeGlobalEnabled = false
     wf['nodes'].forEach(n => {
@@ -88,10 +88,15 @@ api.queuePrompt = async function (e, { output: op, workflow: wf }) {
     });
 
     
-    if(seedNodeId != null){
-        wf.global_seed_widget_id = seedNodeId;
-        wf.global_seed_widget_fixed_enabled = seedNodeFixedEnabled;
-        wf.global_seed_widget_global_enabled = seedNodeGlobalEnabled;
+    if(seedNodeId != -1){
+        wf.global_seed_widget = {
+            'id': seedNodeId,
+            'fixed_seed': seedNodeFixedEnabled,
+            'global_enabled': seedNodeGlobalEnabled
+        }
+        // wf.global_seed_widget_id = seedNodeId;
+        // wf.global_seed_widget_fixed_enabled = seedNodeFixedEnabled;
+        // wf.global_seed_widget_global_enabled = seedNodeGlobalEnabled;
         // wf.global_seed_widget_id = {};
         // wf.global_seed_widget_id[seedNodeId] = seedNodeGlobalEnabled
 
