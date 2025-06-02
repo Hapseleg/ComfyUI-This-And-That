@@ -33,89 +33,48 @@ app.registerExtension({
         if (["Show Prompt (Hapse)"].includes(nodeData.name)) {
             addTextDisplay(nodeType)
         }
-        if (["Simple Seed Selector (Hapse)"].includes(nodeData.name)) {
-            
-        }
+        // If "Simple Seed Selector TnT" (or its registered name) needs specific JS on creation,
+        // it can be added here. Currently, no specific JS is added for it on node creation.
+        // Example: if (nodeData.name === "Simple Seed Selector TnT") { /* ... */ }
     },
 }); 
 
-
-api.addEventListener("TnT-SimpleSeedSelector", function (e) {
-    console.log("addEventListener")
-    console.log(e)
-    let nodes = app.graph._nodes_by_id;
-    for (let nodeId in nodes) {
-        console.log("hereW")
-        let node = nodes[nodeId];
-        console.log(node)
-        // If node is the global seed node
-        if (node.type === "Simple Seed Selector TnT") {
-            if (node.widgets) {
-                const valueWidget = node.widgets.find(w => w.name === "value");
-                const lastSeedWidget = node.widgets.find(w => w.name === "last_seed");
-                if (lastSeedWidget && valueWidget) {
-                    lastSeedWidget.value = valueWidget.value;
-                    valueWidget.value = e.detail.value;
-                }
-            }
-        } else if (node.widgets) {
-            // For other nodes, update seed-related widgets if present
-            const seedWidget = node.widgets.find(
-                w => w.name === "seed_num" || w.name === "seed" || w.name === "noise_seed"
-            );
-            if (seedWidget && e.detail.seed_map[node.id] != null) {
-                seedWidget.value = e.detail.seed_map[node.id];
-            }
-        }
-    }
-})
+// The api.addEventListener("TnT-SimpleSeedSelector", ...) has been removed.
+// The Python 'onprompt' handler now directly modifies widget values in the workflow data
+// sent to the backend, which ComfyUI uses for UI updates. This event listener
+// is likely obsolete for the current seed propagation mechanism and used incorrect widget names.
 
 // Save original queuePrompt function
 const originalQueuePrompt = api.queuePrompt;
 
 // Override queuePrompt to collect seed widgets
 api.queuePrompt = async function (e, { output: op, workflow: wf }) {
-    console.log("queuePrompt")
-    let seedNodeId = -1
-    let seedNodeFixedEnabled = false
-    let seedNodeGlobalEnabled = false
-    wf['nodes'].forEach(n => {
-        if (n['type'] == "Simple Seed Selector TnT"){
-            seedNodeId = n['id']
-            seedNodeFixedEnabled = n['widgets_values'][1]
-            seedNodeGlobalEnabled = n['widgets_values'][2]
-        }
-    });
+    console.log("TnT Custom Node: Overriding queuePrompt to collect seed widget information.");
 
-    
-    if(seedNodeId != -1){
-        wf.global_seed_widget = {
-            'id': seedNodeId,
-            'fixed_seed': seedNodeFixedEnabled,
-            'global_enabled': seedNodeGlobalEnabled
-        }
-        // wf.global_seed_widget_id = seedNodeId;
-        // wf.global_seed_widget_fixed_enabled = seedNodeFixedEnabled;
-        // wf.global_seed_widget_global_enabled = seedNodeGlobalEnabled;
-        // wf.global_seed_widget_id = {};
-        // wf.global_seed_widget_id[seedNodeId] = seedNodeGlobalEnabled
+    // The Python 'onprompt' handler identifies the SimpleSeedSelector TnT node
+    // and its settings (mode, global_seed) directly from the 'prompt' (execution graph) data.
+    // Therefore, explicitly passing this info via 'wf.global_seed_widget' is not strictly necessary
+    // for the Python side to get those settings.
 
-
-        wf.seed_widgets = {};
-        for (let nodeId in app.graph._nodes_by_id) {
-            let widgets = app.graph._nodes_by_id[nodeId].widgets;
-            if (widgets) {
-                for (let idx in widgets) {
-                    let widget = widgets[idx];
-                    if ((widget.name === "seed_num" || widget.name === "seed" || widget.name === "noise_seed") && widget.type !== "converted-widget") 
-                        wf.seed_widgets[nodeId] = parseInt(idx);
-                    
+    // This part IS CRUCIAL for the Python backend to update UI widgets of OTHER nodes.
+    wf.seed_widgets = {}; // Maps nodeId to the index of its seed widget
+    if (app.graph && app.graph._nodes_by_id) {
+        for (const nodeId in app.graph._nodes_by_id) {
+            const node = app.graph._nodes_by_id[nodeId];
+            if (node && Array.isArray(node.widgets)) {
+                for (let i = 0; i < node.widgets.length; i++) {
+                    const widget = node.widgets[i];
+                    if (widget && (widget.name === "seed" || widget.name === "noise_seed" || widget.name === "seed_num") && widget.type !== "converted-widget") {
+                        wf.seed_widgets[nodeId] = i; // Store the numeric index
+                        break; // Found the primary seed widget for this node
+                    }
                 }
             }
         }
+    } else {
+        console.warn("TnT Custom Node: app.graph or app.graph._nodes_by_id is undefined. Cannot collect seed_widgets.");
     }
-
-    
+    console.log("TnT Custom Node: Collected seed_widgets map:", wf.seed_widgets);
 
     return await originalQueuePrompt.call(api, e, { output: op, workflow: wf });
 }
