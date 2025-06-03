@@ -6,7 +6,7 @@ import csv
 # SimpleRatioSelector
 def read_ratio_presets():
     p = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(p, "preset_ratios.csv")
+    file_path = os.path.join(p, "..\preset_ratios.csv")
     preset_ratios_dict = {}
     labels = []
     with open(file_path, newline="") as csvfile:
@@ -56,8 +56,7 @@ class SimpleRatioSelector:
         return (int(width), int(height))
 
 
-
-
+# --------------------------------------------------
 class ShowPrompt:
     def __init__(self):
         self.num = 0
@@ -93,6 +92,7 @@ class ShowPrompt:
         text = json.dumps(clean_prompt)
         
         return {"ui": {"text": text}}
+
 
 NODE_CLASS_MAPPINGS = {
     "Simple Ratio Selector (Hapse)": SimpleRatioSelector,
